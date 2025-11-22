@@ -1,0 +1,68 @@
+###############################################################################
+#                          Generated on phpdocker.io                          #
+###############################################################################
+
+services:
+    nginx:
+        image: 'nginx:alpine'
+        container_name: nginx
+        working_dir: /home/rija/www/formajax
+        volumes:
+            - '.:/home/rija/www/formajax'
+            - './phpdocker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf'
+        ports:
+            - '16000:80'
+        networks:
+            - mynetwork
+
+    php-fpm:
+        build: phpdocker/php-fpm
+        working_dir: /home/rija/www/formajax
+        container_name: symfony-php
+        volumes:
+            - '.:/home/rija/www/formajax'
+            - /dev/shm:/dev/shm
+            - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/8.3/fpm/conf.d/99-overrides.ini'
+            - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/8.3/cli/conf.d/99-overrides.ini'
+        environment:
+            - APP_ENV=test
+        networks:
+            - mynetwork
+
+    mysql:
+        image: mysql:8.0
+        working_dir: /home/rija/www/formajax
+        volumes:
+            - '.:/home/rija/www/formajax'
+        container_name: symfony-mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_DATABASE=formajax
+            - MYSQL_USER=rija
+            - MYSQL_PASSWORD=secret
+        ports:
+            - '27002:3306'
+        networks:
+            - mynetwork
+
+    adminer:
+        image: adminer:latest
+        container_name: adminer
+        ports:
+            - '8023:8080'
+        links:
+            - mysql
+        networks:
+            - mynetwork
+
+    mailhog:
+        image: 'mailhog/mailhog:latest'
+        container_name: mailhog
+        ports:
+            - '16001:8025'
+        networks:
+            - mynetwork
+
+networks:
+    mynetwork:
+        driver: bridge
